@@ -173,6 +173,9 @@ void main() {
                          // just continue on becuz P&O is probably on right track
                          direction = direction;
                      }
+                     
+                     
+                     THIS IS A TEST
                      */
                      
                      // change the duty cycle.
