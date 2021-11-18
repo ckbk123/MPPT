@@ -1,5 +1,5 @@
 #line 1 "C:/Users/baokh/ownCloud/Partie algo/211105_Commande_MPPT_v2/211105_Commande_MPPT_v2.c"
-#line 61 "C:/Users/baokh/ownCloud/Partie algo/211105_Commande_MPPT_v2/211105_Commande_MPPT_v2.c"
+#line 64 "C:/Users/baokh/ownCloud/Partie algo/211105_Commande_MPPT_v2/211105_Commande_MPPT_v2.c"
  unsigned int  voltage_in = 0;
  unsigned int  current_in = 0;
  unsigned int  voltage_out = 0;
@@ -111,10 +111,10 @@ void main() {
 
  D = D + direction* 1 ;
 
- if (D ==  25 ) {
+ if (D ==  32 ) {
  D =  230  - 5;
  }else if (D ==  230 ) {
- D =  25  + 5;
+ D =  32  + 5;
  }
  }
  break;
@@ -194,8 +194,8 @@ void main() {
 
  if (D >  230 ) {
  D =  230 ;
- }else if (D <  25 ) {
- D =  25 ;
+ }else if (D <  32 ) {
+ D =  32 ;
  }
  PWM1_Set_Duty(D);
 

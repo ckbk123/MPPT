@@ -26,7 +26,10 @@
 #define INT16        signed int
 #define INT32        signed long int
 
-#define MIN_PWM      25                                  // set the mininum duty cycle possible. 5% is decent => around 25/255
+// quite a drastic MIN_PWM change: this is becuz we are supposing working with Lì-ion / LFP batteries
+// which cannot be below 2V anyway and the max voltage we can reach is around 14V at best
+// so we may never exceed the x8 gain => therefore D of 1/8 or below is useless
+#define MIN_PWM      32                                  // set the mininum duty cycle possible. 5% is decent => around 25/255
 #define MAX_PWM      230                                 // set the maximum duty cycle possible. 95% is decent => around 230/255
 
 // here's 2 modes of operation that we wanna test: the fast GMPPT and P&O
