@@ -99,8 +99,16 @@ void main() {
  PORTB |=  0x01 ;
 
 
+ if ( abs(delta_power) > (last_measured_power>>4) ) {
+ mode =  1 ;
+ D = sweep_duty_cycle[0];
+ break;
+ }else {
+
  direction = (delta_power < 0) ? -direction : direction;
-#line 181 "C:/Users/baokh/ownCloud/Partie algo/211105_Commande_MPPT_v2/211105_Commande_MPPT_v2.c"
+
+
+
  D = D + direction* 1 ;
 
  if (D ==  25 ) {
@@ -108,7 +116,7 @@ void main() {
  }else if (D ==  230 ) {
  D =  25  + 5;
  }
-
+ }
  break;
  case  1 :
 
@@ -127,7 +135,7 @@ void main() {
  }
  }else if (sweep_iteration == 0 && voltage_in >= 350 && voltage_in <= 370) {
  sweep_duty_cycle[0] = D;
- sweep_power[0] = voltage_in*current_in;
+ sweep_power[0] = measured_power;
  sweep_iteration = 1;
  D = sweep_duty_cycle[1];
  }else if (sweep_iteration == 1 && (voltage_in < 600 || voltage_in > 640)) {
@@ -140,7 +148,7 @@ void main() {
  }
  }else if (sweep_iteration == 1 && voltage_in >= 600 && voltage_in <= 640) {
  sweep_duty_cycle[1] = D;
- sweep_power[1] = voltage_in*current_in;
+ sweep_power[1] = measured_power;
  sweep_iteration = 2;
  D = sweep_duty_cycle[2];
  }else if (sweep_iteration == 2 && (voltage_in < 835 || voltage_in > 905)) {
@@ -153,7 +161,7 @@ void main() {
  }
  }else if (sweep_iteration == 2 && voltage_in >= 835 && voltage_in <= 905) {
  sweep_duty_cycle[2] = D;
- sweep_power[2] = voltage_in*current_in;
+ sweep_power[2] = measured_power;
  sweep_iteration = 3;
 
 
@@ -168,9 +176,11 @@ void main() {
 
  D = sweep_duty_cycle[max_power_index];
 
- sweep_iteration = 0;
+ sweep_iteration = 3;
+ }else if (sweep_iteration == 3) {
 
  mode =  0 ;
+ sweep_iteration = 0;
  }
  break;
  }
@@ -217,6 +227,7 @@ void init() {
 
 
  OSCCON = 0x72;
+
 
 
 

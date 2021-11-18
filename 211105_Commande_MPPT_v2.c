@@ -155,40 +155,26 @@ void main() {
                      // light up LED 0 to indicate we are on P&O MPPT
                      PORTB &= ~BIT1; // clear LED1
                      PORTB |= BIT0; //  set LED0
-
-                     // simple P&O. Invert direction only when delta_power is negative
-                     direction = (delta_power < 0) ? -direction : direction;
                      
-                     /*
                      // first comparison: if the delta power is bigger than 6.25% of the last measured power point, we need to change over to GMPPT
-                     if (abs(delta_power) > (last_measured_power>>4)) {
+                     if ( abs(delta_power) > (last_measured_power>>4) ) {
                          mode = FAST_GMPPT;
                          D = sweep_duty_cycle[0];                // make it change to the first guess immediately
-                         break;
-                     }else if (delta_power < -voltage_in * CURRENT_HYSTERESIS) {
-                         // reverse P&O direction because we are probaly not on track
-                         direction = -direction;
-                                                 
-                     }else if (delta_power > voltage_in * CURRENT_HYSTERESIS) {
-                         // just continue on becuz P&O is probably on right track
-                         direction = direction;
+                         break;                                  // and just bail...
+                     }else {
+                         // simple P&O. Invert direction only when delta_power is negative
+                         direction = (delta_power < 0) ? -direction : direction;
+                         // change the duty cycle.
+                         // why is this thing outside? well for the Perturb part
+                         // because if we don't change D, we aint getting the direction to move toward
+                         D = D + direction*DELTA_D;
+                         // but like if D reaches MAX_PWM or MIN_PWM, we need to move it away from there a bit
+                         if (D == MIN_PWM) {
+                               D = MAX_PWM - 5;   // a bit far away
+                         }else if (D == MAX_PWM) {
+                               D = MIN_PWM + 5;
+                         }
                      }
-                     
-                     
-                     THIS IS A TEST
-                     */
-                     
-                     // change the duty cycle.
-                     // why is this thing outside? well for the Perturb part
-                     // because if we don't change D, we aint getting the direction to move toward
-                     D = D + direction*DELTA_D;
-                     // but like if D reaches MAX_PWM or MIN_PWM, we need to move it away from there a bit
-                     if (D == MIN_PWM) {
-                           D = MAX_PWM - 5;   // a bit far away
-                     }else if (D == MAX_PWM) {
-                           D = MIN_PWM + 5;
-                     }
-                     
                 break;
                 case FAST_GMPPT: /******************************************/   /* THIS SECTION IS STILL OPTIMIZABLE */
                      // light up LED 1 to indicate we are on fast GMPPT (this may not be very visible tho...)
@@ -207,7 +193,7 @@ void main() {
                           }        
                      }else if (sweep_iteration == 0 && voltage_in >= 350 && voltage_in <= 370) {
                           sweep_duty_cycle[0] = D;                    // save the current duty cycle that has the correct voltage
-                          sweep_power[0] = voltage_in*current_in;     // log the power as measured
+                          sweep_power[0] = measured_power;     // log the power as measured
                           sweep_iteration = 1;                        // go to the next iteration
                           D = sweep_duty_cycle[1];                     // give the next duty cyce to find as well
                      }else if (sweep_iteration == 1 && (voltage_in < 600 || voltage_in > 640)) {
@@ -220,7 +206,7 @@ void main() {
                           }
                      }else if (sweep_iteration == 1 && voltage_in >= 600 && voltage_in <= 640) {
                           sweep_duty_cycle[1] = D;                    // save the current duty cycle that has the correct voltage
-                          sweep_power[1] = voltage_in*current_in;     // log the power as measured
+                          sweep_power[1] = measured_power;     // log the power as measured
                           sweep_iteration = 2;                        // go to the next iteration
                           D = sweep_duty_cycle[2];                     // give the next duty cyce to find as well
                      }else if (sweep_iteration == 2 && (voltage_in < 835 || voltage_in > 905)) {
@@ -233,9 +219,9 @@ void main() {
                           }
                      }else if (sweep_iteration == 2 && voltage_in >= 835 && voltage_in <= 905) {
                           sweep_duty_cycle[2] = D;                    // save the current duty cycle that has the correct voltage
-                          sweep_power[2] = voltage_in*current_in;     // log the power as measured
+                          sweep_power[2] = measured_power;     // log the power as measured
                           sweep_iteration = 3;                        // reset sweep iteration but we jump state anyway so no prob here
-                          
+
                           // now we need to determine which peak to choose from
                           max_power = 0;
                           for (main_counter = 0; main_counter<3; ++main_counter) {
@@ -247,10 +233,12 @@ void main() {
                           }
                           // then we just send the duty cycle that allowed us to have max_power
                           D = sweep_duty_cycle[max_power_index];
-                          // reset sweep iteration
-                          sweep_iteration = 0;
-                          // change back to mode P&O
+                          // we need an extra cycle so that when going back to regular P&O it doesnt immediately jump back to this GMPPT
+                          sweep_iteration = 3;
+                     }else if (sweep_iteration == 3) {
+                          // reset sweep iteration, with no duty cycle change becuz we are going back to P&O
                           mode = MPPT_PO;
+                          sweep_iteration = 0;
                      }
                 break;
             }   
