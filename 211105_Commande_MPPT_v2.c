@@ -154,31 +154,6 @@ void main() {
             delta_voltage = (INT16)voltage_in - (INT16)last_voltage_in;
 
             switch(mode) {
-                case MPPT_PO:    /******************************************/
-                     // light up LED 0 to indicate we are on P&O MPPT
-                     PORTB &= ~BIT1; // clear LED1
-                     PORTB |= BIT0; //  set LED0
-                     
-                     // first comparison: if the delta power is bigger than 6.25% of the last measured power point, we need to change over to GMPPT
-                     if ( abs(delta_power) > (last_measured_power>>4) ) {
-                         mode = FAST_GMPPT;
-                         D = sweep_duty_cycle[0];                // make it change to the first guess immediately
-                         break;                                  // and just bail...
-                     }else {
-                         // simple P&O. Invert direction only when delta_power is negative
-                         direction = (delta_power < 0) ? -direction : direction;
-                         // change the duty cycle.
-                         // why is this thing outside? well for the Perturb part
-                         // because if we don't change D, we aint getting the direction to move toward
-                         D = D + direction*DELTA_D;
-                         // but like if D reaches MAX_PWM or MIN_PWM, we need to move it away from there a bit
-                         if (D == MIN_PWM) {
-                               D = MAX_PWM - 5;   // a bit far away
-                         }else if (D == MAX_PWM) {
-                               D = MIN_PWM + 5;
-                         }
-                     }
-                break;
                 case FAST_GMPPT: /******************************************/   /* THIS SECTION IS STILL OPTIMIZABLE */
                      // light up LED 1 to indicate we are on fast GMPPT (this may not be very visible tho...)
 
@@ -243,6 +218,33 @@ void main() {
                           mode = MPPT_PO;
                           sweep_iteration = 0;
                      }
+                break;
+                case MPPT_PO:    /******************************************/
+                     // light up LED 0 to indicate we are on P&O MPPT
+                     PORTB &= ~BIT1; // clear LED1
+                     PORTB |= BIT0; //  set LED0
+
+                     // first comparison: if the delta power is bigger than 6.25% of the last measured power point, we need to change over to GMPPT
+                     if ( abs(delta_power) > (last_measured_power>>4) ) {
+                         mode = FAST_GMPPT;
+                         D = sweep_duty_cycle[0];                // make it change to the first guess immediately
+                         break;                                  // and just bail...
+                     }else {
+                         // simple P&O. Invert direction only when delta_power is negative
+                         direction = (delta_power < 0) ? -direction : direction;
+                         // change the duty cycle.
+                         // why is this thing outside? well for the Perturb part
+                         // because if we don't change D, we aint getting the direction to move toward
+                         D = D + direction*DELTA_D;
+                         // but like if D reaches MAX_PWM or MIN_PWM, we need to move it away from there a bit
+                         if (D == MIN_PWM) {
+                               D = MAX_PWM - 5;   // a bit far away
+                         }else if (D == MAX_PWM) {
+                               D = MIN_PWM + 5;
+                         }
+                     }
+                break;
+                case STEADY_STATE:
                 break;
             }   
             /**** STORE NEW VALUES TO OLD ****/
