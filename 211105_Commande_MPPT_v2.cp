@@ -1,22 +1,22 @@
 #line 1 "C:/Users/baokh/ownCloud/Partie algo/211105_Commande_MPPT_v2/211105_Commande_MPPT_v2.c"
-#line 64 "C:/Users/baokh/ownCloud/Partie algo/211105_Commande_MPPT_v2/211105_Commande_MPPT_v2.c"
- unsigned int  voltage_in = 0;
- unsigned int  current_in = 0;
- unsigned int  voltage_out = 0;
+#line 68 "C:/Users/baokh/ownCloud/Partie algo/211105_Commande_MPPT_v2/211105_Commande_MPPT_v2.c"
+ signed int  voltage_in = 0;
+ signed int  current_in = 0;
+ signed int  voltage_out = 0;
 
 
 
- unsigned long int  measured_power = 0;
+ signed long int  measured_power = 0;
 
 
- unsigned int  last_voltage_in = 0;
- unsigned int  last_current_in = 0;
- unsigned int  last_voltage_out = 0;
+ signed int  last_voltage_in = 0;
+ signed int  last_current_in = 0;
+ signed int  last_voltage_out = 0;
 
 
 
- unsigned long int  last_measured_power = 0;
-
+ signed long int  last_measured_power = 0;
+ signed long int  last_delta_power = 0;
 
  signed int  delta_voltage = 0;
  signed long int  delta_power = 0;
@@ -48,11 +48,23 @@
 
 
  unsigned char  sweep_iteration = 0;
- unsigned int  sweep_duty_cycle[3] = {100, 100, 100};
+ unsigned int  sweep_duty_cycle[3] = {0, 0, 0};
  unsigned long int  sweep_power[3] = {0, 0, 0};
+ unsigned int  sweep_lower_bounds[3] = {350, 600, 835};
+ unsigned int  sweep_upper_bounds[3] = {370, 640, 905};
+ unsigned int  sweep_target[3] = {360, 620, 870};
  unsigned long int  max_power = 0;
  unsigned char  max_power_index = 0;
 
+ unsigned long int  P_max_fast_gmppt = 0;
+ unsigned char  D_max_fast_gmppt = 0;
+
+ unsigned long int  P_max_adaptive = 0;
+ unsigned char  D_max_adaptive = 0;
+ unsigned char  D_step = 0;
+ unsigned char  speed_coeff = 0;
+
+ unsigned char  oscillation_detect = 0;
 
 void init();
 
@@ -67,9 +79,11 @@ void main() {
 
  for (counter = 0; counter < 4; ++counter) {
  voltage_in += ADC_Read(0);
+ voltage_out += ADC_Read(2);
  }
 
  voltage_in >>= 2;
+ voltage_out >>= 2;
 
 
  for (counter = 0; counter < 8; ++counter) {
@@ -79,45 +93,12 @@ void main() {
  current_in >>= 3;
 
 
- for (counter = 0; counter < 4; ++counter) {
- voltage_out += ADC_Read(2);
- }
-
  voltage_out >>= 2;
 
 
- measured_power = ( unsigned long int )voltage_in * ( unsigned long int )current_in;
-
-
- delta_power = ( signed long int )measured_power - ( signed long int )last_measured_power;
- delta_voltage = ( signed int )voltage_in - ( signed int )last_voltage_in;
+ measured_power = ( signed long int )voltage_in * ( signed long int )current_in;
 
  switch(mode) {
- case  0 :
-
- PORTB &= ~ 0x02 ;
- PORTB |=  0x01 ;
-
-
- if ( abs(delta_power) > (last_measured_power>>4) ) {
- mode =  1 ;
- D = sweep_duty_cycle[0];
- break;
- }else {
-
- direction = (delta_power < 0) ? -direction : direction;
-
-
-
- D = D + direction* 1 ;
-
- if (D ==  32 ) {
- D =  230  - 5;
- }else if (D ==  230 ) {
- D =  32  + 5;
- }
- }
- break;
  case  1 :
 
 
@@ -125,62 +106,98 @@ void main() {
 
 
 
- if (sweep_iteration == 0 && (voltage_in < 350 || voltage_in > 370) ) {
- PORTB &= ~ 0x01 ;
- PORTB |=  0x02 ;
- if (voltage_in < 360) {
- D = D - ((360 - voltage_in)>>3);
+ if (sweep_iteration < 3 && (voltage_in < sweep_lower_bounds[sweep_iteration] || voltage_in > sweep_upper_bounds[sweep_iteration]) ) {
+ if (voltage_in < sweep_target[sweep_iteration]) {
+ D = D - ( (sweep_target[sweep_iteration] - voltage_in)>>(3+sweep_iteration) );
  }else {
- D = D + ((voltage_in - 360)>>3);
+ D = D + ( (voltage_in - sweep_target[sweep_iteration])>>(3+sweep_iteration) );
  }
- }else if (sweep_iteration == 0 && voltage_in >= 350 && voltage_in <= 370) {
- sweep_duty_cycle[0] = D;
- sweep_power[0] = measured_power;
- sweep_iteration = 1;
- D = sweep_duty_cycle[1];
- }else if (sweep_iteration == 1 && (voltage_in < 600 || voltage_in > 640)) {
- PORTB &= ~ 0x02 ;
- PORTB |=  0x01 ;
- if (voltage_in < 620) {
- D = D - ((620 - voltage_in)>>4);
- }else {
- D = D + ((voltage_in - 620)>>4);
- }
- }else if (sweep_iteration == 1 && voltage_in >= 600 && voltage_in <= 640) {
- sweep_duty_cycle[1] = D;
- sweep_power[1] = measured_power;
- sweep_iteration = 2;
- D = sweep_duty_cycle[2];
- }else if (sweep_iteration == 2 && (voltage_in < 835 || voltage_in > 905)) {
- PORTB |= ( 0x02  +  0x04 );
+ }else if (sweep_iteration < 3 && voltage_in >= sweep_lower_bounds[sweep_iteration] && voltage_in <= sweep_upper_bounds[sweep_iteration]) {
+ sweep_duty_cycle[sweep_iteration] = D;
+ sweep_power[sweep_iteration] = measured_power;
+ ++sweep_iteration;
+ if (sweep_iteration < 3) {
+ D = sweep_duty_cycle[sweep_iteration];
 
- if (voltage_in < 870) {
- D = D - ((870 - voltage_in)>>5);
  }else {
- D = D + ((voltage_in - 870)>>5);
- }
- }else if (sweep_iteration == 2 && voltage_in >= 835 && voltage_in <= 905) {
- sweep_duty_cycle[2] = D;
- sweep_power[2] = measured_power;
- sweep_iteration = 3;
-
 
  max_power = 0;
- for (main_counter = 0; main_counter<3; ++main_counter) {
-
- if (sweep_power[main_counter] > max_power) {
- max_power = sweep_power[main_counter];
- max_power_index = main_counter;
+ for (counter = 0; counter < 3; ++counter) {
+ if (sweep_power[counter] > max_power) {
+ max_power = sweep_power[counter];
+ D = sweep_duty_cycle[counter];
  }
  }
 
- D = sweep_duty_cycle[max_power_index];
 
- sweep_iteration = 3;
- }else if (sweep_iteration == 3) {
+ last_voltage_in = 0;
+ last_current_in = 0;
+ last_voltage_out = 0;
+ last_measured_power = 0;
+ last_delta_power = 0;
 
- mode =  0 ;
- sweep_iteration = 0;
+ speed_coeff = 4;
+
+ P_max_adaptive = 0;
+ D_max_adaptive = 0;
+ }
+ }
+ break;
+ case  0 :
+
+ delta_power = measured_power - last_measured_power;
+ delta_voltage = voltage_in - last_voltage_in;
+
+ if (measured_power > P_max_adaptive) {
+ D_max_adaptive = D;
+ P_max_adaptive = measured_power;
+ }
+
+
+
+
+
+ if (voltage_in >= 680) {
+ D_step = speed_coeff;
+ }else if (voltage_in >= 470) {
+ D_step = speed_coeff>>1;
+ }else {
+ D_step = speed_coeff>>4;
+ }
+
+
+ if (last_measured_power) {
+ if ( (delta_power >= 0 && delta_voltage >= 0) || (delta_power <= 0 && delta_voltage <= 0) ) {
+ D -= D_step;
+ }else {
+ D += D_step;
+ }
+ if (oscillation_detect <  4 ) {
+ if (last_delta_power > 0 && delta_power < 0 || last_delta_power < 0 && delta_power > 0) {
+ ++oscillation_detect;
+ }else {
+ oscillation_detect = 0;
+ }
+ }
+ if (oscillation_detect ==  4  && speed_coeff > 0) {
+ speed_coeff >>= 1;
+ oscillation_detect = 0;
+ }
+ if (speed_coeff == 0) {
+ mode =  2 ;
+ oscillation_detect = 0;
+ D = D_max_adaptive;
+ }
+ }
+
+ last_delta_power = delta_power;
+ break;
+ case  2 :
+
+
+ if ((measured_power - P_max_adaptive) > 6000 || (measured_power - P_max_adaptive) > 6000) {
+ mode =  1 ;
+ P_max_adaptive = 0;
  }
  break;
  }
@@ -189,6 +206,7 @@ void main() {
 
  last_voltage_in = voltage_in;
  last_measured_power = measured_power;
+
 
 
 

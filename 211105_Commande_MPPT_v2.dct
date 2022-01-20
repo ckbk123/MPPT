@@ -110,6 +110,9 @@ csrc
 csrc_bit
 current_in
 d
+d_max_adaptive
+d_max_fast_gmppt
+d_step
 dc
 dc_bit
 dc1b0
@@ -249,6 +252,7 @@ irvst
 irvst_bit
 labs
 last_current_in
+last_delta_power
 last_measured_power
 last_voltage_in
 last_voltage_out
@@ -350,11 +354,14 @@ oscfif
 oscfif_bit
 oscfip
 oscfip_bit
+oscillation_detect
 osctune
 osts
 osts_bit
 ov
 ov_bit
+p_max_adaptive
+p_max_fast_gmppt
 p1m0
 p1m0_bit
 p1m1
@@ -557,6 +564,7 @@ sp4
 sp4_bit
 spbrg
 spbrgh
+speed_coeff
 spen
 spen_bit
 srand
@@ -574,7 +582,10 @@ swdten
 swdten_bit
 sweep_duty_cycle
 sweep_iteration
+sweep_lower_bounds
 sweep_power
+sweep_target
+sweep_upper_bounds
 sync
 sync_bit
 t08bit

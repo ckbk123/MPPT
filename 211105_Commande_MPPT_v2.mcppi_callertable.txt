@@ -6,7 +6,6 @@ main
 	ADC_Read
 		Delay_22us
 	Mul_32x32_U
-	abs
 	PWM1_Set_Duty
 		Mul_16x16_U
 interrupt
