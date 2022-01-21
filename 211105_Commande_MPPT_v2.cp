@@ -39,7 +39,7 @@
  unsigned char  main_counter = 0;
 
 
- unsigned char  mode =  0 ;
+ unsigned char  mode =  2 ;
 
 
 
@@ -171,7 +171,7 @@ void main() {
  D += D_step;
  }
  if (oscillation_detect <  4 ) {
- if (last_delta_power > 0 && delta_power < 0 || last_delta_power < 0 && delta_power > 0) {
+ if ( (last_delta_power >= 0 && delta_power <= 0) || (last_delta_power <= 0 && delta_power >= 0) ) {
  ++oscillation_detect;
  }else {
  oscillation_detect = 0;
@@ -188,6 +188,7 @@ void main() {
  }
  }
 
+
  last_delta_power = delta_power;
  last_voltage_in = voltage_in;
  last_measured_power = measured_power;
@@ -195,7 +196,7 @@ void main() {
  case  2 :
 
 
- if ((measured_power - P_max_adaptive) > 6000 || (measured_power - P_max_adaptive) > 6000) {
+ if ((measured_power - P_max_adaptive) > 1000 || (measured_power - P_max_adaptive) > 1000) {
  mode =  1 ;
  P_max_adaptive = 0;
  P_max_fast_gmppt = 0;
@@ -248,7 +249,7 @@ void init() {
 
 
 
- T0CON = 0xC4;
+ T0CON = 0xC6;
 
 
 

@@ -104,7 +104,7 @@ UINT8 counter = 0;
 UINT8 main_counter = 0;
 
 // set default mode to P&O
-UINT8 mode = ADAPTIVE_PO;
+UINT8 mode = STEADY_STATE;
 
 // The 3 voltage values that we need to aim for is 5.4V, 9.2V and 12.8V, converted over to as value is
 // Values for 3.2 version board: 5.4V => 358, 9.2V => 618, 12.8V => 864
@@ -132,6 +132,11 @@ UINT8 speed_coeff = 0;
 UINT8 oscillation_detect = 0;
 /******************************* FUNCTION PROTOTYPE *******************************/
 void init();
+
+void LED1_ON();
+void LED1_OFF();
+void LED2_ON();
+void LED2_OFF();
 
 void main() {
     // call init function to initialize the necessary peripherals
@@ -173,9 +178,9 @@ void main() {
                      // apply for 1st sweep
                      if (sweep_iteration < 3 && (voltage_in < sweep_lower_bounds[sweep_iteration] || voltage_in > sweep_upper_bounds[sweep_iteration]) ) {
                           if (voltage_in < sweep_target[sweep_iteration]) {
-                                  D = D - ( (sweep_target[sweep_iteration] - voltage_in)>>(3+sweep_iteration) );
+                              D = D - ( (sweep_target[sweep_iteration] - voltage_in)>>(3+sweep_iteration) );
                           }else {
-                                  D = D + ( (voltage_in - sweep_target[sweep_iteration])>>(3+sweep_iteration) );
+                              D = D + ( (voltage_in - sweep_target[sweep_iteration])>>(3+sweep_iteration) );
                           }        
                      }else if (sweep_iteration < 3 && voltage_in >= sweep_lower_bounds[sweep_iteration] && voltage_in <= sweep_upper_bounds[sweep_iteration]) {
                           sweep_duty_cycle[sweep_iteration] = D;                   // save the current duty cycle that has the correct voltage
@@ -236,7 +241,7 @@ void main() {
                           D += D_step;
                        }
                        if (oscillation_detect < OSCILLATION_MAX) {
-                          if (last_delta_power >= 0 && delta_power <= 0 || last_delta_power <= 0 && delta_power => 0) {
+                          if ( (last_delta_power >= 0 && delta_power <= 0) || (last_delta_power <= 0 && delta_power >= 0) ) {
                              ++oscillation_detect;                // increment the oscillation detect counter
                           }else {
                              oscillation_detect = 0;              // any interruption means we need to reset this counter
@@ -252,6 +257,7 @@ void main() {
                           D = D_max_adaptive;
                        }
                      }
+
                      // store the last power delta
                      last_delta_power = delta_power;
                      last_voltage_in = voltage_in;
@@ -260,7 +266,7 @@ void main() {
                 case STEADY_STATE:
                      // at entry, there should a one cycle where D is at D_max_adaptive already
                      
-                     if ((measured_power - P_max_adaptive) > 6000 || (measured_power - P_max_adaptive) > 6000) {
+                     if ((measured_power - P_max_adaptive) > 1000 || (measured_power - P_max_adaptive) > 1000) {
                         mode = FAST_GMPPT;
                         P_max_adaptive = 0;                // reset P_max_adaptive
                         P_max_fast_gmppt = 0;              // register the max power obtained during the sweep
@@ -311,8 +317,8 @@ void init() {
     // datasheet pg 99
     // Timer0 clock source is Fosc/4 so 2MHz
     // Timer0 is basically to wait for PWM to settle
-    // WARNING: INCORRECT VALUES, UNDERGOING TEST WITH SLOWER INTERRUPT TIME. The 6 behind is "Doubt X"
-    // WAIT I SHOULD CONFIRM CLOCK SPEED HERE?? LIKE PLUG AN OSCILLOSCOPE IN AN START TO OBSERVE THE FREQUENCY OF THIS INTERRUPT TO BE SURE
+    // 0xC5 gives 8ms approx
+    // 0xC6 gives 16ms approx
     T0CON  = 0xC6;
 
     // TRIS decide the direction of each GPIO pin. All pin on port A set to IN (1 is IN, 0 is OUT)
@@ -337,3 +343,4 @@ void init() {
     PWM1_Start();             // start PWM
 
 }
+
