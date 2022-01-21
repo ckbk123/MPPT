@@ -6,6 +6,10 @@ main
 	ADC_Read
 		Delay_22us
 	Mul_32x32_U
+	LED0_ON
+	LED1_OFF
+	LED1_ON
+	LED0_OFF
 	PWM1_Set_Duty
 		Mul_16x16_U
 interrupt

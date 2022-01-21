@@ -289,6 +289,10 @@ latb6_bit
 latb7
 latb7_bit
 ldiv
+led0_off
+led0_on
+led1_off
+led1_on
 longint2double
 longjmp
 longword2double

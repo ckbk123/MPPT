@@ -47,19 +47,19 @@
 
 
 
- unsigned char  sweep_iteration = 0;
+ signed char  sweep_iteration = 0;
  unsigned char  sweep_duty_cycle[3] = {0, 0, 0};
 
- unsigned long int  P_max_fast_gmppt = 0;
+ signed long int  P_max_fast_gmppt = 0;
  unsigned char  D_max_fast_gmppt = 0;
 
- unsigned int  sweep_lower_bounds[3] = {350, 600, 835};
- unsigned int  sweep_upper_bounds[3] = {370, 640, 905};
- unsigned int  sweep_target[3] = {360, 620, 870};
- unsigned long int  max_power = 0;
+ signed int  sweep_lower_bounds[3] = {350, 600, 835};
+ signed int  sweep_upper_bounds[3] = {370, 640, 950};
+ signed int  sweep_target[3] = {360, 620, 870};
+ signed long int  max_power = 0;
  unsigned char  max_power_index = 0;
 
- unsigned long int  P_max_adaptive = 0;
+ signed long int  P_max_adaptive = 0;
  unsigned char  D_max_adaptive = 0;
  unsigned char  D_step = 0;
  unsigned char  speed_coeff = 0;
@@ -68,22 +68,28 @@
 
 void init();
 
+void LED0_ON();
+void LED0_OFF();
+void LED1_ON();
+void LED1_OFF();
+
 void main() {
 
  init();
 
  while(1) {
 
+
  if (settled) {
 
 
  for (counter = 0; counter < 4; ++counter) {
  voltage_in += ADC_Read(0);
- voltage_out += ADC_Read(2);
+
  }
 
  voltage_in >>= 2;
- voltage_out >>= 2;
+
 
 
  for (counter = 0; counter < 8; ++counter) {
@@ -93,14 +99,10 @@ void main() {
  current_in >>= 3;
 
 
- voltage_out >>= 2;
-
-
  measured_power = ( signed long int )voltage_in * ( signed long int )current_in;
 
  switch(mode) {
  case  1 :
-
 
 
 
@@ -114,15 +116,18 @@ void main() {
  }
  }else if (sweep_iteration < 3 && voltage_in >= sweep_lower_bounds[sweep_iteration] && voltage_in <= sweep_upper_bounds[sweep_iteration]) {
  sweep_duty_cycle[sweep_iteration] = D;
+
  if (measured_power > P_max_fast_gmppt) {
  D_max_fast_gmppt = measured_power;
  D_max_fast_gmppt = D;
  }
 
  ++sweep_iteration;
+
  if (sweep_iteration < 3) {
- D = sweep_duty_cycle[sweep_iteration];
+ if (sweep_duty_cycle[sweep_iteration]) D = sweep_duty_cycle[sweep_iteration];
  }else {
+ sweep_iteration = 0;
 
  D = D_max_fast_gmppt;
 
@@ -138,10 +143,18 @@ void main() {
 
  P_max_adaptive = 0;
  D_max_adaptive = 0;
+
+
+
+ mode =  0 ;
  }
  }
+ LED0_ON();
+ LED1_OFF();
  break;
  case  0 :
+ LED1_ON();
+ LED0_OFF();
 
  delta_power = measured_power - last_measured_power;
  delta_voltage = voltage_in - last_voltage_in;
@@ -195,7 +208,6 @@ void main() {
  break;
  case  2 :
 
-
  if ((measured_power - P_max_adaptive) > 1000 || (measured_power - P_max_adaptive) > 1000) {
  mode =  1 ;
  P_max_adaptive = 0;
@@ -206,10 +218,10 @@ void main() {
  }
 
 
- if (D >  230 ) {
- D =  230 ;
- }else if (D <  32 ) {
- D =  32 ;
+ if (D >  240 ) {
+ D =  240 ;
+ }else if (D <  20 ) {
+ D =  20 ;
  }
  PWM1_Set_Duty(D);
 
@@ -272,4 +284,16 @@ void init() {
  PWM1_Init(10000);
  PWM1_Start();
 
+}
+void LED0_ON() {
+ PORTB |=  0x01 ;
+}
+void LED0_OFF() {
+ PORTB &= ~ 0x01 ;
+}
+void LED1_ON() {
+ PORTB |=  0x02 ;
+}
+void LED1_OFF() {
+ PORTB &= ~ 0x02 ;
 }
