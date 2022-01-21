@@ -124,6 +124,10 @@ void main() {
     while(1) {
         // only if a measurement is made that we start doing these things
         if (settled) {
+            // OH MAI GOTT!!!!
+            // reset all measurements plz
+            voltage_in = 0;
+            current_in = 0;
             // we detect which mode we are in and start doing calculations and things
             /************* measuring input voltage (PV voltage) ************/
             for (counter = 0; counter < 4; ++counter) {
