@@ -10,26 +10,43 @@ L_main0:
 	MOVF        _settled+0, 1 
 	BTFSC       STATUS+0, 2 
 	GOTO        L_main2
-;211105_Commande_MPPT_v2.c,151 :: 		for (counter = 0; counter < 4; ++counter) {
+;211105_Commande_MPPT_v2.c,150 :: 		voltage_in = 0;
+	CLRF        _voltage_in+0 
+	CLRF        _voltage_in+1 
+;211105_Commande_MPPT_v2.c,151 :: 		voltage_out = 0;
+	CLRF        _voltage_out+0 
+	CLRF        _voltage_out+1 
+;211105_Commande_MPPT_v2.c,152 :: 		current_in = 0;
+	CLRF        _current_in+0 
+	CLRF        _current_in+1 
+;211105_Commande_MPPT_v2.c,155 :: 		for (counter = 0; counter < 4; ++counter) {
 	CLRF        _counter+0 
 L_main3:
 	MOVLW       4
 	SUBWF       _counter+0, 0 
 	BTFSC       STATUS+0, 0 
 	GOTO        L_main4
-;211105_Commande_MPPT_v2.c,152 :: 		voltage_in += ADC_Read(0);
+;211105_Commande_MPPT_v2.c,156 :: 		voltage_in += ADC_Read(0);
 	CLRF        FARG_ADC_Read_channel+0 
 	CALL        _ADC_Read+0, 0
 	MOVF        R0, 0 
 	ADDWF       _voltage_in+0, 1 
 	MOVF        R1, 0 
 	ADDWFC      _voltage_in+1, 1 
-;211105_Commande_MPPT_v2.c,151 :: 		for (counter = 0; counter < 4; ++counter) {
+;211105_Commande_MPPT_v2.c,157 :: 		voltage_out += ADC_Read(2);
+	MOVLW       2
+	MOVWF       FARG_ADC_Read_channel+0 
+	CALL        _ADC_Read+0, 0
+	MOVF        R0, 0 
+	ADDWF       _voltage_out+0, 1 
+	MOVF        R1, 0 
+	ADDWFC      _voltage_out+1, 1 
+;211105_Commande_MPPT_v2.c,155 :: 		for (counter = 0; counter < 4; ++counter) {
 	INCF        _counter+0, 1 
-;211105_Commande_MPPT_v2.c,154 :: 		}
+;211105_Commande_MPPT_v2.c,158 :: 		}
 	GOTO        L_main3
 L_main4:
-;211105_Commande_MPPT_v2.c,156 :: 		voltage_in >>= 2;
+;211105_Commande_MPPT_v2.c,160 :: 		voltage_in >>= 2;
 	RRCF        _voltage_in+1, 1 
 	RRCF        _voltage_in+0, 1 
 	BCF         _voltage_in+1, 7 
@@ -40,14 +57,25 @@ L_main4:
 	BCF         _voltage_in+1, 7 
 	BTFSC       _voltage_in+1, 6 
 	BSF         _voltage_in+1, 7 
-;211105_Commande_MPPT_v2.c,160 :: 		for (counter = 0; counter < 8; ++counter) {
+;211105_Commande_MPPT_v2.c,161 :: 		voltage_out >>= 2;
+	RRCF        _voltage_out+1, 1 
+	RRCF        _voltage_out+0, 1 
+	BCF         _voltage_out+1, 7 
+	BTFSC       _voltage_out+1, 6 
+	BSF         _voltage_out+1, 7 
+	RRCF        _voltage_out+1, 1 
+	RRCF        _voltage_out+0, 1 
+	BCF         _voltage_out+1, 7 
+	BTFSC       _voltage_out+1, 6 
+	BSF         _voltage_out+1, 7 
+;211105_Commande_MPPT_v2.c,164 :: 		for (counter = 0; counter < 8; ++counter) {
 	CLRF        _counter+0 
 L_main6:
 	MOVLW       8
 	SUBWF       _counter+0, 0 
 	BTFSC       STATUS+0, 0 
 	GOTO        L_main7
-;211105_Commande_MPPT_v2.c,161 :: 		current_in += ADC_Read(1);
+;211105_Commande_MPPT_v2.c,165 :: 		current_in += ADC_Read(1);
 	MOVLW       1
 	MOVWF       FARG_ADC_Read_channel+0 
 	CALL        _ADC_Read+0, 0
@@ -55,12 +83,12 @@ L_main6:
 	ADDWF       _current_in+0, 1 
 	MOVF        R1, 0 
 	ADDWFC      _current_in+1, 1 
-;211105_Commande_MPPT_v2.c,160 :: 		for (counter = 0; counter < 8; ++counter) {
+;211105_Commande_MPPT_v2.c,164 :: 		for (counter = 0; counter < 8; ++counter) {
 	INCF        _counter+0, 1 
-;211105_Commande_MPPT_v2.c,162 :: 		}
+;211105_Commande_MPPT_v2.c,166 :: 		}
 	GOTO        L_main6
 L_main7:
-;211105_Commande_MPPT_v2.c,164 :: 		current_in >>= 3;
+;211105_Commande_MPPT_v2.c,168 :: 		current_in >>= 3;
 	MOVLW       3
 	MOVWF       R2 
 	MOVF        _current_in+0, 0 
@@ -82,7 +110,7 @@ L__main74:
 	MOVWF       _current_in+0 
 	MOVF        R1, 0 
 	MOVWF       _current_in+1 
-;211105_Commande_MPPT_v2.c,167 :: 		measured_power = (INT32)voltage_in * (INT32)current_in;
+;211105_Commande_MPPT_v2.c,171 :: 		measured_power = (INT32)voltage_in * (INT32)current_in;
 	MOVF        _voltage_in+0, 0 
 	MOVWF       R4 
 	MOVF        _voltage_in+1, 0 
@@ -106,11 +134,11 @@ L__main74:
 	MOVWF       _measured_power+2 
 	MOVF        R3, 0 
 	MOVWF       _measured_power+3 
-;211105_Commande_MPPT_v2.c,169 :: 		switch(mode) {
+;211105_Commande_MPPT_v2.c,173 :: 		switch(mode) {
 	GOTO        L_main9
-;211105_Commande_MPPT_v2.c,170 :: 		case FAST_GMPPT:  /* THIS SECTION IS STILL OPTIMIZABLE */
+;211105_Commande_MPPT_v2.c,174 :: 		case FAST_GMPPT:  /* THIS SECTION IS STILL OPTIMIZABLE */
 L_main11:
-;211105_Commande_MPPT_v2.c,176 :: 		if (sweep_iteration < 3 && (voltage_in < sweep_lower_bounds[sweep_iteration] || voltage_in > sweep_upper_bounds[sweep_iteration]) ) {
+;211105_Commande_MPPT_v2.c,180 :: 		if (sweep_iteration < 3 && (voltage_in < sweep_lower_bounds[sweep_iteration] || voltage_in > sweep_upper_bounds[sweep_iteration]) ) {
 	MOVLW       128
 	XORWF       _sweep_iteration+0, 0 
 	MOVWF       R0 
@@ -190,7 +218,7 @@ L__main76:
 	GOTO        L_main16
 L__main72:
 L__main71:
-;211105_Commande_MPPT_v2.c,177 :: 		if (voltage_in < sweep_target[sweep_iteration]) {
+;211105_Commande_MPPT_v2.c,181 :: 		if (voltage_in < sweep_target[sweep_iteration]) {
 	MOVF        _sweep_iteration+0, 0 
 	MOVWF       R0 
 	MOVLW       0
@@ -225,7 +253,7 @@ L__main71:
 L__main77:
 	BTFSC       STATUS+0, 0 
 	GOTO        L_main17
-;211105_Commande_MPPT_v2.c,178 :: 		D = D - ( (sweep_target[sweep_iteration] - voltage_in)>>(3+sweep_iteration) );
+;211105_Commande_MPPT_v2.c,182 :: 		D = D - ( (sweep_target[sweep_iteration] - voltage_in)>>(3+sweep_iteration) );
 	MOVF        _sweep_iteration+0, 0 
 	MOVWF       R0 
 	MOVLW       0
@@ -276,10 +304,10 @@ L__main79:
 	SUBWF       _D+0, 1 
 	MOVF        R1, 0 
 	SUBWFB      _D+1, 1 
-;211105_Commande_MPPT_v2.c,179 :: 		}else {
+;211105_Commande_MPPT_v2.c,183 :: 		}else {
 	GOTO        L_main18
 L_main17:
-;211105_Commande_MPPT_v2.c,180 :: 		D = D + ( (voltage_in - sweep_target[sweep_iteration])>>(3+sweep_iteration) );
+;211105_Commande_MPPT_v2.c,184 :: 		D = D + ( (voltage_in - sweep_target[sweep_iteration])>>(3+sweep_iteration) );
 	MOVF        _sweep_iteration+0, 0 
 	MOVWF       R0 
 	MOVLW       0
@@ -330,9 +358,9 @@ L__main81:
 	ADDWF       _D+0, 1 
 	MOVF        R1, 0 
 	ADDWFC      _D+1, 1 
-;211105_Commande_MPPT_v2.c,181 :: 		}
+;211105_Commande_MPPT_v2.c,185 :: 		}
 L_main18:
-;211105_Commande_MPPT_v2.c,182 :: 		}else if (sweep_iteration < 3 && voltage_in >= sweep_lower_bounds[sweep_iteration] && voltage_in <= sweep_upper_bounds[sweep_iteration]) {
+;211105_Commande_MPPT_v2.c,186 :: 		}else if (sweep_iteration < 3 && voltage_in >= sweep_lower_bounds[sweep_iteration] && voltage_in <= sweep_upper_bounds[sweep_iteration]) {
 	GOTO        L_main19
 L_main16:
 	MOVLW       128
@@ -412,7 +440,7 @@ L__main83:
 	BTFSS       STATUS+0, 0 
 	GOTO        L_main22
 L__main70:
-;211105_Commande_MPPT_v2.c,183 :: 		sweep_duty_cycle[sweep_iteration] = D;                   // save the current duty cycle that has the correct voltage
+;211105_Commande_MPPT_v2.c,187 :: 		sweep_duty_cycle[sweep_iteration] = D;                   // save the current duty cycle that has the correct voltage
 	MOVLW       _sweep_duty_cycle+0
 	MOVWF       FSR1L 
 	MOVLW       hi_addr(_sweep_duty_cycle+0)
@@ -425,7 +453,7 @@ L__main70:
 	ADDWFC      FSR1H, 1 
 	MOVF        _D+0, 0 
 	MOVWF       POSTINC1+0 
-;211105_Commande_MPPT_v2.c,185 :: 		if (measured_power > P_max_fast_gmppt) {
+;211105_Commande_MPPT_v2.c,189 :: 		if (measured_power > P_max_fast_gmppt) {
 	MOVLW       128
 	XORWF       _P_max_fast_gmppt+3, 0 
 	MOVWF       R0 
@@ -447,17 +475,17 @@ L__main70:
 L__main84:
 	BTFSC       STATUS+0, 0 
 	GOTO        L_main23
-;211105_Commande_MPPT_v2.c,186 :: 		D_max_fast_gmppt = measured_power;
+;211105_Commande_MPPT_v2.c,190 :: 		D_max_fast_gmppt = measured_power;
 	MOVF        _measured_power+0, 0 
 	MOVWF       _D_max_fast_gmppt+0 
-;211105_Commande_MPPT_v2.c,187 :: 		D_max_fast_gmppt = D;
+;211105_Commande_MPPT_v2.c,191 :: 		D_max_fast_gmppt = D;
 	MOVF        _D+0, 0 
 	MOVWF       _D_max_fast_gmppt+0 
-;211105_Commande_MPPT_v2.c,188 :: 		}
+;211105_Commande_MPPT_v2.c,192 :: 		}
 L_main23:
-;211105_Commande_MPPT_v2.c,190 :: 		++sweep_iteration;                                       // go to the next iteration
+;211105_Commande_MPPT_v2.c,194 :: 		++sweep_iteration;                                       // go to the next iteration
 	INCF        _sweep_iteration+0, 1 
-;211105_Commande_MPPT_v2.c,192 :: 		if (sweep_iteration < 3) {
+;211105_Commande_MPPT_v2.c,196 :: 		if (sweep_iteration < 3) {
 	MOVLW       128
 	XORWF       _sweep_iteration+0, 0 
 	MOVWF       R0 
@@ -466,7 +494,7 @@ L_main23:
 	SUBWF       R0, 0 
 	BTFSC       STATUS+0, 0 
 	GOTO        L_main24
-;211105_Commande_MPPT_v2.c,193 :: 		if (sweep_duty_cycle[sweep_iteration]) D = sweep_duty_cycle[sweep_iteration];       // only assign new D if it is different from 0
+;211105_Commande_MPPT_v2.c,197 :: 		if (sweep_duty_cycle[sweep_iteration]) D = sweep_duty_cycle[sweep_iteration];       // only assign new D if it is different from 0
 	MOVLW       _sweep_duty_cycle+0
 	MOVWF       FSR0L 
 	MOVLW       hi_addr(_sweep_duty_cycle+0)
@@ -497,64 +525,56 @@ L_main23:
 	MOVLW       0
 	MOVWF       _D+1 
 L_main25:
-;211105_Commande_MPPT_v2.c,194 :: 		}else { // getting here means that we have already logged the measured power for sweep 0, 1, 2
+;211105_Commande_MPPT_v2.c,198 :: 		}else { // getting here means that we have already logged the measured power for sweep 0, 1, 2
 	GOTO        L_main26
 L_main24:
-;211105_Commande_MPPT_v2.c,195 :: 		sweep_iteration = 0;
+;211105_Commande_MPPT_v2.c,199 :: 		sweep_iteration = 0;
 	CLRF        _sweep_iteration+0 
-;211105_Commande_MPPT_v2.c,197 :: 		D = D_max_fast_gmppt;
+;211105_Commande_MPPT_v2.c,201 :: 		D = D_max_fast_gmppt;
 	MOVF        _D_max_fast_gmppt+0, 0 
 	MOVWF       _D+0 
 	MOVLW       0
 	MOVWF       _D+1 
-;211105_Commande_MPPT_v2.c,200 :: 		last_voltage_in = 0;
+;211105_Commande_MPPT_v2.c,204 :: 		last_voltage_in = 0;
 	CLRF        _last_voltage_in+0 
 	CLRF        _last_voltage_in+1 
-;211105_Commande_MPPT_v2.c,201 :: 		last_current_in = 0;
+;211105_Commande_MPPT_v2.c,205 :: 		last_current_in = 0;
 	CLRF        _last_current_in+0 
 	CLRF        _last_current_in+1 
-;211105_Commande_MPPT_v2.c,202 :: 		last_voltage_out = 0;
+;211105_Commande_MPPT_v2.c,206 :: 		last_voltage_out = 0;
 	CLRF        _last_voltage_out+0 
 	CLRF        _last_voltage_out+1 
-;211105_Commande_MPPT_v2.c,203 :: 		last_measured_power = 0;
+;211105_Commande_MPPT_v2.c,207 :: 		last_measured_power = 0;
 	CLRF        _last_measured_power+0 
 	CLRF        _last_measured_power+1 
 	CLRF        _last_measured_power+2 
 	CLRF        _last_measured_power+3 
-;211105_Commande_MPPT_v2.c,204 :: 		last_delta_power = 0;
+;211105_Commande_MPPT_v2.c,208 :: 		last_delta_power = 0;
 	CLRF        _last_delta_power+0 
 	CLRF        _last_delta_power+1 
 	CLRF        _last_delta_power+2 
 	CLRF        _last_delta_power+3 
-;211105_Commande_MPPT_v2.c,207 :: 		speed_coeff = 4;
+;211105_Commande_MPPT_v2.c,211 :: 		speed_coeff = 4;
 	MOVLW       4
 	MOVWF       _speed_coeff+0 
-;211105_Commande_MPPT_v2.c,209 :: 		P_max_adaptive = 0;
+;211105_Commande_MPPT_v2.c,213 :: 		P_max_adaptive = 0;
 	CLRF        _P_max_adaptive+0 
 	CLRF        _P_max_adaptive+1 
 	CLRF        _P_max_adaptive+2 
 	CLRF        _P_max_adaptive+3 
-;211105_Commande_MPPT_v2.c,210 :: 		D_max_adaptive = 0;
+;211105_Commande_MPPT_v2.c,214 :: 		D_max_adaptive = 0;
 	CLRF        _D_max_adaptive+0 
-;211105_Commande_MPPT_v2.c,214 :: 		mode = ADAPTIVE_PO;
+;211105_Commande_MPPT_v2.c,218 :: 		mode = ADAPTIVE_PO;
 	CLRF        _mode+0 
-;211105_Commande_MPPT_v2.c,215 :: 		}
+;211105_Commande_MPPT_v2.c,219 :: 		}
 L_main26:
-;211105_Commande_MPPT_v2.c,216 :: 		}
+;211105_Commande_MPPT_v2.c,220 :: 		}
 L_main22:
 L_main19:
-;211105_Commande_MPPT_v2.c,217 :: 		LED0_ON();
-	CALL        _LED0_ON+0, 0
-;211105_Commande_MPPT_v2.c,218 :: 		LED1_OFF();
-	CALL        _LED1_OFF+0, 0
-;211105_Commande_MPPT_v2.c,219 :: 		break;
+;211105_Commande_MPPT_v2.c,221 :: 		break;
 	GOTO        L_main10
-;211105_Commande_MPPT_v2.c,220 :: 		case ADAPTIVE_PO:    /******************************************/
+;211105_Commande_MPPT_v2.c,222 :: 		case ADAPTIVE_PO:    /******************************************/
 L_main27:
-;211105_Commande_MPPT_v2.c,221 :: 		LED1_ON();
-	CALL        _LED1_ON+0, 0
-;211105_Commande_MPPT_v2.c,222 :: 		LED0_OFF();
-	CALL        _LED0_OFF+0, 0
 ;211105_Commande_MPPT_v2.c,224 :: 		delta_power = measured_power - last_measured_power;
 	MOVF        _measured_power+0, 0 
 	MOVWF       _delta_power+0 

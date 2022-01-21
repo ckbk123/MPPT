@@ -36,7 +36,8 @@ Count=0
 [PLDS]
 Count=0
 [Useses]
-Count=3
+Count=4
 File0=ADC
 File1=C_Stdlib
 File2=PWM
+File3=C_Math

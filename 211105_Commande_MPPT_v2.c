@@ -104,7 +104,7 @@ UINT8 counter = 0;
 UINT8 main_counter = 0;
 
 // set default mode to P&O
-UINT8 mode = STEADY_STATE;
+UINT8 mode = FAST_GMPPT;
 
 // The 3 voltage values that we need to aim for is 5.4V, 9.2V and 12.8V, converted over to as value is
 // Values for 3.2 version board: 5.4V => 358, 9.2V => 618, 12.8V => 864

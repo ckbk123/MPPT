@@ -18,6 +18,7 @@ abden
 abden_bit
 abs
 access
+acos
 acqt0
 acqt0_bit
 acqt1
@@ -52,6 +53,9 @@ adon_bit
 adres
 adresh
 adresl
+asin
+atan
+atan2
 atof
 atoi
 atol
@@ -93,6 +97,7 @@ ccp1m3_bit
 ccpr1
 ccpr1h
 ccpr1l
+ceil
 cfgs
 cfgs_bit
 chs0
@@ -103,6 +108,8 @@ chs2
 chs2_bit
 comfrem
 compare_double
+cos
+cosh
 counter
 cren
 cren_bit
@@ -173,13 +180,17 @@ eeip_bit
 eepgd
 eepgd_bit
 equals_double
+exp
 f
+fabs
 fast
 ferr
 ferr_bit
 fixsign32
+floor
 free
 free_bit
+frexp
 fsr0
 fsr0h
 fsr0l
@@ -288,11 +299,14 @@ latb6
 latb6_bit
 latb7
 latb7_bit
+ldexp
 ldiv
 led0_off
 led0_on
 led1_off
 led1_on
+log
+log10
 longint2double
 longjmp
 longword2double
@@ -321,6 +335,7 @@ max_power_index
 measured_power
 min
 mode
+modf
 mul_16x16_s
 mul_16x16_u
 mul_32x32_fp
@@ -432,6 +447,7 @@ postdec2
 postinc0
 postinc1
 postinc2
+pow
 pr2
 preinc0
 preinc1
@@ -556,6 +572,8 @@ setfun32
 setiov3224
 setjmp
 settled
+sin
+sinh
 sp0
 sp0_bit
 sp1
@@ -571,6 +589,7 @@ spbrgh
 speed_coeff
 spen
 spen_bit
+sqrt
 srand
 sren
 sren_bit
@@ -634,6 +653,8 @@ t3con
 t3sync
 t3sync_bit
 tablat
+tan
+tanh
 tblptr
 tblptrh
 tblptrl

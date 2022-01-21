@@ -39,7 +39,7 @@
  unsigned char  main_counter = 0;
 
 
- unsigned char  mode =  2 ;
+ unsigned char  mode =  1 ;
 
 
 
@@ -82,14 +82,18 @@ void main() {
 
  if (settled) {
 
+ voltage_in = 0;
+ voltage_out = 0;
+ current_in = 0;
+
 
  for (counter = 0; counter < 4; ++counter) {
  voltage_in += ADC_Read(0);
-
+ voltage_out += ADC_Read(2);
  }
 
  voltage_in >>= 2;
-
+ voltage_out >>= 2;
 
 
  for (counter = 0; counter < 8; ++counter) {
@@ -149,12 +153,8 @@ void main() {
  mode =  0 ;
  }
  }
- LED0_ON();
- LED1_OFF();
  break;
  case  0 :
- LED1_ON();
- LED0_OFF();
 
  delta_power = measured_power - last_measured_power;
  delta_voltage = voltage_in - last_voltage_in;
