@@ -48,16 +48,16 @@
 
 
  unsigned char  sweep_iteration = 0;
- unsigned int  sweep_duty_cycle[3] = {0, 0, 0};
- unsigned long int  sweep_power[3] = {0, 0, 0};
+ unsigned char  sweep_duty_cycle[3] = {0, 0, 0};
+
+ unsigned long int  P_max_fast_gmppt = 0;
+ unsigned char  D_max_fast_gmppt = 0;
+
  unsigned int  sweep_lower_bounds[3] = {350, 600, 835};
  unsigned int  sweep_upper_bounds[3] = {370, 640, 905};
  unsigned int  sweep_target[3] = {360, 620, 870};
  unsigned long int  max_power = 0;
  unsigned char  max_power_index = 0;
-
- unsigned long int  P_max_fast_gmppt = 0;
- unsigned char  D_max_fast_gmppt = 0;
 
  unsigned long int  P_max_adaptive = 0;
  unsigned char  D_max_adaptive = 0;
@@ -114,20 +114,17 @@ void main() {
  }
  }else if (sweep_iteration < 3 && voltage_in >= sweep_lower_bounds[sweep_iteration] && voltage_in <= sweep_upper_bounds[sweep_iteration]) {
  sweep_duty_cycle[sweep_iteration] = D;
- sweep_power[sweep_iteration] = measured_power;
+ if (measured_power > P_max_fast_gmppt) {
+ D_max_fast_gmppt = measured_power;
+ D_max_fast_gmppt = D;
+ }
+
  ++sweep_iteration;
  if (sweep_iteration < 3) {
  D = sweep_duty_cycle[sweep_iteration];
-
  }else {
 
- max_power = 0;
- for (counter = 0; counter < 3; ++counter) {
- if (sweep_power[counter] > max_power) {
- max_power = sweep_power[counter];
- D = sweep_duty_cycle[counter];
- }
- }
+ D = D_max_fast_gmppt;
 
 
  last_voltage_in = 0;
@@ -135,6 +132,7 @@ void main() {
  last_voltage_out = 0;
  last_measured_power = 0;
  last_delta_power = 0;
+
 
  speed_coeff = 4;
 
@@ -191,6 +189,8 @@ void main() {
  }
 
  last_delta_power = delta_power;
+ last_voltage_in = voltage_in;
+ last_measured_power = measured_power;
  break;
  case  2 :
 
@@ -198,16 +198,11 @@ void main() {
  if ((measured_power - P_max_adaptive) > 6000 || (measured_power - P_max_adaptive) > 6000) {
  mode =  1 ;
  P_max_adaptive = 0;
+ P_max_fast_gmppt = 0;
+ D_max_fast_gmppt = 0;
  }
  break;
  }
-
-
-
- last_voltage_in = voltage_in;
- last_measured_power = measured_power;
-
-
 
 
  if (D >  230 ) {

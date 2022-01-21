@@ -583,7 +583,6 @@ swdten_bit
 sweep_duty_cycle
 sweep_iteration
 sweep_lower_bounds
-sweep_power
 sweep_target
 sweep_upper_bounds
 sync
