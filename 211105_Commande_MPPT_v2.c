@@ -146,15 +146,19 @@ void main() {
 
         // only if a measurement is made that we start doing these things
         if (settled) {
+            // reset all MEASUREMENt VARIABLES before reusing them
+            voltage_in = 0;
+            voltage_out = 0;
+            current_in = 0;
             // we detect which mode we are in and start doing calculations and things
             /************* measuring input voltage and output voltage (PV voltage + Vbat) ************/
             for (counter = 0; counter < 4; ++counter) {
                voltage_in += ADC_Read(0);
-               // voltage_out += ADC_Read(2);
+               voltage_out += ADC_Read(2);
             }
             // divide voltage_in by 4 to take the average
             voltage_in >>= 2;
-            // voltage_out >>= 2;
+            voltage_out >>= 2;
 
             /************* measuring input current (PV current) ************/
             for (counter = 0; counter < 8; ++counter) {
@@ -358,4 +362,3 @@ void LED1_ON() {
 void LED1_OFF() {
     PORTB &= ~BIT1; // clear LED1
 }
-
