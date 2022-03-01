@@ -48,14 +48,15 @@
 
 
  signed char  sweep_iteration = 0;
- unsigned char  sweep_duty_cycle[3] = {0, 0, 0};
+ unsigned char  sweep_duty_cycle[3] = {200, 120, 85};
 
  signed long int  P_max_fast_gmppt = 0;
  unsigned char  D_max_fast_gmppt = 0;
 
- signed int  sweep_lower_bounds[3] = {350, 600, 835};
- signed int  sweep_upper_bounds[3] = {370, 640, 950};
+ signed int  sweep_lower_bounds[3] = {355, 610, 850};
  signed int  sweep_target[3] = {360, 620, 870};
+ signed int  sweep_upper_bounds[3] = {365, 630, 890};
+
  signed long int  max_power = 0;
  unsigned char  max_power_index = 0;
 
@@ -89,21 +90,18 @@ void main() {
 
  for (counter = 0; counter < 4; ++counter) {
  voltage_in += ADC_Read(0);
- voltage_out += ADC_Read(2);
+
  }
 
  voltage_in >>= 2;
- voltage_out >>= 2;
 
 
- for (counter = 0; counter < 8; ++counter) {
+
+ for (counter = 0; counter < 16; ++counter) {
  current_in += ADC_Read(1);
  }
 
- current_in >>= 3;
-
-
- measured_power = ( signed long int )voltage_in * ( signed long int )current_in;
+ current_in >>= 4;
 
  switch(mode) {
  case  1 :
@@ -114,15 +112,18 @@ void main() {
 
  if (sweep_iteration < 3 && (voltage_in < sweep_lower_bounds[sweep_iteration] || voltage_in > sweep_upper_bounds[sweep_iteration]) ) {
  if (voltage_in < sweep_target[sweep_iteration]) {
- D = D - ( (sweep_target[sweep_iteration] - voltage_in)>>(3+sweep_iteration) );
+ D = D - ( (sweep_target[sweep_iteration] - voltage_in)>>(1+sweep_iteration) );
  }else {
- D = D + ( (voltage_in - sweep_target[sweep_iteration])>>(3+sweep_iteration) );
+ D = D + ( (voltage_in - sweep_target[sweep_iteration])>>(1+sweep_iteration) );
  }
  }else if (sweep_iteration < 3 && voltage_in >= sweep_lower_bounds[sweep_iteration] && voltage_in <= sweep_upper_bounds[sweep_iteration]) {
  sweep_duty_cycle[sweep_iteration] = D;
 
+
+ measured_power = ( signed long int )voltage_in * ( signed long int )current_in;
+
  if (measured_power > P_max_fast_gmppt) {
- D_max_fast_gmppt = measured_power;
+ P_max_fast_gmppt = measured_power;
  D_max_fast_gmppt = D;
  }
 
@@ -149,12 +150,13 @@ void main() {
  D_max_adaptive = 0;
 
 
-
  mode =  0 ;
  }
  }
  break;
  case  0 :
+
+ measured_power = ( signed long int )voltage_in * ( signed long int )current_in;
 
  delta_power = measured_power - last_measured_power;
  delta_voltage = voltage_in - last_voltage_in;
@@ -171,9 +173,9 @@ void main() {
  if (voltage_in >= 680) {
  D_step = speed_coeff;
  }else if (voltage_in >= 470) {
- D_step = speed_coeff>>1;
+ D_step = speed_coeff<<1;
  }else {
- D_step = speed_coeff>>4;
+ D_step = speed_coeff<<2;
  }
 
 
@@ -183,18 +185,18 @@ void main() {
  }else {
  D += D_step;
  }
- if (oscillation_detect <  4 ) {
+ if (oscillation_detect <  3 ) {
  if ( (last_delta_power >= 0 && delta_power <= 0) || (last_delta_power <= 0 && delta_power >= 0) ) {
  ++oscillation_detect;
  }else {
  oscillation_detect = 0;
  }
  }
- if (oscillation_detect ==  4  && speed_coeff > 0) {
+ if (oscillation_detect ==  3  && speed_coeff > 1) {
  speed_coeff >>= 1;
  oscillation_detect = 0;
  }
- if (speed_coeff == 0) {
+ if (speed_coeff == 1) {
  mode =  2 ;
  oscillation_detect = 0;
  D = D_max_adaptive;
@@ -208,11 +210,15 @@ void main() {
  break;
  case  2 :
 
- if ((measured_power - P_max_adaptive) > 1000 || (measured_power - P_max_adaptive) > 1000) {
+ measured_power = ( signed long int )voltage_in * ( signed long int )current_in;
+
+ if ((measured_power - P_max_adaptive) > (measured_power>>4) || (P_max_adaptive - measured_power) > (measured_power>>4)) {
  mode =  1 ;
  P_max_adaptive = 0;
  P_max_fast_gmppt = 0;
  D_max_fast_gmppt = 0;
+
+ D = sweep_duty_cycle[sweep_iteration];
  }
  break;
  }
@@ -261,7 +267,7 @@ void init() {
 
 
 
- T0CON = 0xC6;
+ T0CON = 0xC5;
 
 
 

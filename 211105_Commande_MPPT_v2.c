@@ -45,7 +45,7 @@
 #define MAX_VOLTAGE_OUT    550
 
 // this determines how many cycles we will observe before declaring that the system enter oscillation
-#define OSCILLATION_MAX 4
+#define OSCILLATION_MAX 3
 
 // some definition necessary for Fast GMPP part
 // this is designed for a case where 4 bypass diodes, with 3 accessible peak zones (becuz 1 is at 2.2V, not accessible using a buck for an output of 4.2V)
@@ -113,14 +113,15 @@ UINT8 mode = FAST_GMPPT;
 // the margins are also important: for the first 1, the duty cycle is based on delta_voltage>>2 so if u change the margin
 // it may not converge at all.
 INT8 sweep_iteration = 0;               // this is to track which PP are we investigating during the sweep
-UINT8 sweep_duty_cycle[3] = {0, 0, 0};        // random guess because the == 0 comparison is only worth while at startup but take up code during subsequent passes
+UINT8 sweep_duty_cycle[3] = {200, 120, 85};        // random guess because the == 0 comparison is only worth while at startup but take up code during subsequent passes
                                               // this array is necessary because it serves as a great starting point for the next iteration
 INT32 P_max_fast_gmppt = 0;                  // max power that we measured during fast GMPPT
 UINT8 D_max_fast_gmppt = 0;                   // the duty cycle that gives P_max_fast_gmppt
 
-INT16 sweep_lower_bounds[3] = {350, 600, 835};      // store the lower bounds for the sweep iterations
-INT16 sweep_upper_bounds[3] = {370, 640, 950};
-INT16 sweep_target[3] = {360, 620, 870};
+INT16 sweep_lower_bounds[3] = {355, 610, 850};      // store the lower bounds for the sweep iterations
+INT16 sweep_target[3] =       {360, 620, 870};      // the target values
+INT16 sweep_upper_bounds[3] = {365, 630, 890};      // upper bounds for the sweep iterations
+
 INT32 max_power = 0;                          // register the max amount of power
 UINT8 max_power_index = 0;                    // the index of max power in the array of 3
 
@@ -154,21 +155,18 @@ void main() {
             /************* measuring input voltage and output voltage (PV voltage + Vbat) ************/
             for (counter = 0; counter < 4; ++counter) {
                voltage_in += ADC_Read(0);
-               voltage_out += ADC_Read(2);
+               //voltage_out += ADC_Read(2);
             }
             // divide voltage_in by 4 to take the average
             voltage_in >>= 2;
-            voltage_out >>= 2;
+            //voltage_out >>= 2;
 
             /************* measuring input current (PV current) ************/
-            for (counter = 0; counter < 8; ++counter) {
+            for (counter = 0; counter < 16; ++counter) {
                 current_in += ADC_Read(1);
             }
             // then divide current_in by 16 to take the average. Current is kinda jittery so that's why we make more measurements
-            current_in >>= 3;
-
-            // calculate the power as measured
-            measured_power = (INT32)voltage_in * (INT32)current_in;
+            current_in >>= 4;
 
             switch(mode) {
                 case FAST_GMPPT:  /* THIS SECTION IS STILL OPTIMIZABLE */
@@ -179,15 +177,18 @@ void main() {
                      // apply for 1st sweep
                      if (sweep_iteration < 3 && (voltage_in < sweep_lower_bounds[sweep_iteration] || voltage_in > sweep_upper_bounds[sweep_iteration]) ) {
                           if (voltage_in < sweep_target[sweep_iteration]) {
-                              D = D - ( (sweep_target[sweep_iteration] - voltage_in)>>(3+sweep_iteration) );
+                              D = D - ( (sweep_target[sweep_iteration] - voltage_in)>>(1+sweep_iteration) );
                           }else {
-                              D = D + ( (voltage_in - sweep_target[sweep_iteration])>>(3+sweep_iteration) );
+                              D = D + ( (voltage_in - sweep_target[sweep_iteration])>>(1+sweep_iteration) );
                           }
                      }else if (sweep_iteration < 3 && voltage_in >= sweep_lower_bounds[sweep_iteration] && voltage_in <= sweep_upper_bounds[sweep_iteration]) {
                           sweep_duty_cycle[sweep_iteration] = D;                   // save the current duty cycle that has the correct voltage
 
+                          // calculate the power as measured    (in here because it is not necessary to do this when searching for voltage values)
+                          measured_power = (INT32)voltage_in * (INT32)current_in;
+
                           if (measured_power > P_max_fast_gmppt) {
-                             D_max_fast_gmppt = measured_power;
+                             P_max_fast_gmppt = measured_power;
                              D_max_fast_gmppt = D;
                           }
 
@@ -213,13 +214,14 @@ void main() {
                                P_max_adaptive = 0;
                                D_max_adaptive = 0;
 
-                               
                                // change mode of operation
                                mode = ADAPTIVE_PO;
                           }
                      }
                 break;
                 case ADAPTIVE_PO:    /******************************************/
+                     // measure the power obtained
+                     measured_power = (INT32)voltage_in * (INT32)current_in;
                      // calculate the delta voltage and delta power
                      delta_power = measured_power - last_measured_power;
                      delta_voltage = voltage_in - last_voltage_in;
@@ -236,9 +238,9 @@ void main() {
                      if (voltage_in >= 680) {
                         D_step = speed_coeff;
                      }else if (voltage_in >= 470) {
-                        D_step = speed_coeff>>1;
+                        D_step = speed_coeff<<1;
                      }else {
-                        D_step = speed_coeff>>4;
+                        D_step = speed_coeff<<2;
                      }
 
                      // this section only makes sens if we last_measured_power
@@ -255,12 +257,12 @@ void main() {
                              oscillation_detect = 0;              // any interruption means we need to reset this counter
                           }
                        }
-                       if (oscillation_detect == OSCILLATION_MAX && speed_coeff > 0) {
+                       if (oscillation_detect == OSCILLATION_MAX && speed_coeff > 1) {
                           speed_coeff >>= 1;
                           oscillation_detect = 0;
                        }
-                       if (speed_coeff == 0) {
-                          mode = STEADY_STATE;                   // if speed_coeff becomes 0 it means that we should go into steady state
+                       if (speed_coeff == 1) {
+                          mode = STEADY_STATE;                   // if speed_coeff becomes 1 it means that we should go into steady state, its ok we aint losing much
                           oscillation_detect = 0;
                           D = D_max_adaptive;
                        }
@@ -272,16 +274,20 @@ void main() {
                      last_measured_power = measured_power;
                 break;
                 case STEADY_STATE:
+                     // measure the power obtained
+                     measured_power = (INT32)voltage_in * (INT32)current_in;
                      // at entry, there should a one cycle where D is at D_max_adaptive already
-                     if ((measured_power - P_max_adaptive) > 1000 || (measured_power - P_max_adaptive) > 1000) {
+                     if ((measured_power - P_max_adaptive) > (measured_power>>4) || (P_max_adaptive - measured_power) > (measured_power>>4)) {
                         mode = FAST_GMPPT;
                         P_max_adaptive = 0;                // reset P_max_adaptive
                         P_max_fast_gmppt = 0;              // register the max power obtained during the sweep
                         D_max_fast_gmppt = 0;
+                        // set the start duty cycle immediately
+                        D = sweep_duty_cycle[sweep_iteration];
                      }
                 break;
             }
-            // we need to send the duty cycle after all of these calculations
+            // we need to send duty cycle after all of these calculations
             // we do it here becuz the interrupt loop is better timed
             if (D > MAX_PWM) {
                   D = MAX_PWM;
@@ -326,7 +332,7 @@ void init() {
     // Timer0 is basically to wait for PWM to settle
     // 0xC5 gives 8ms approx
     // 0xC6 gives 16ms approx
-    T0CON  = 0xC6;
+    T0CON  = 0xC5;
 
     // TRIS decide the direction of each GPIO pin. All pin on port A set to IN (1 is IN, 0 is OUT)
     // check datasheet pg87
