@@ -118,9 +118,9 @@ UINT8 sweep_duty_cycle[3] = {200, 120, 85};        // random guess because the =
 INT32 P_max_fast_gmppt = 0;                  // max power that we measured during fast GMPPT
 UINT8 D_max_fast_gmppt = 0;                   // the duty cycle that gives P_max_fast_gmppt
 
-INT16 sweep_lower_bounds[3] = {355, 610, 850};      // store the lower bounds for the sweep iterations
-INT16 sweep_target[3] =       {360, 620, 870};      // the target values
-INT16 sweep_upper_bounds[3] = {365, 630, 890};      // upper bounds for the sweep iterations
+INT16 sweep_lower_bounds[3] = {360, 600, 780};      // store the lower bounds for the sweep iterations
+INT16 sweep_target[3] =       {365, 610, 800};      // the target values
+INT16 sweep_upper_bounds[3] = {370, 620, 820};      // upper bounds for the sweep iterations
 
 INT32 max_power = 0;                          // register the max amount of power
 UINT8 max_power_index = 0;                    // the index of max power in the array of 3
@@ -153,12 +153,12 @@ void main() {
             current_in = 0;
             // we detect which mode we are in and start doing calculations and things
             /************* measuring input voltage and output voltage (PV voltage + Vbat) ************/
-            for (counter = 0; counter < 4; ++counter) {
+            for (counter = 0; counter < 8; ++counter) {
                voltage_in += ADC_Read(0);
                //voltage_out += ADC_Read(2);
             }
             // divide voltage_in by 4 to take the average
-            voltage_in >>= 2;
+            voltage_in >>= 3;
             //voltage_out >>= 2;
 
             /************* measuring input current (PV current) ************/

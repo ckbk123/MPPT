@@ -53,9 +53,9 @@
  signed long int  P_max_fast_gmppt = 0;
  unsigned char  D_max_fast_gmppt = 0;
 
- signed int  sweep_lower_bounds[3] = {355, 610, 850};
- signed int  sweep_target[3] = {360, 620, 870};
- signed int  sweep_upper_bounds[3] = {365, 630, 890};
+ signed int  sweep_lower_bounds[3] = {360, 600, 780};
+ signed int  sweep_target[3] = {365, 610, 800};
+ signed int  sweep_upper_bounds[3] = {370, 620, 820};
 
  signed long int  max_power = 0;
  unsigned char  max_power_index = 0;
@@ -88,12 +88,12 @@ void main() {
  current_in = 0;
 
 
- for (counter = 0; counter < 4; ++counter) {
+ for (counter = 0; counter < 8; ++counter) {
  voltage_in += ADC_Read(0);
 
  }
 
- voltage_in >>= 2;
+ voltage_in >>= 3;
 
 
 

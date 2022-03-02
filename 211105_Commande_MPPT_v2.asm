@@ -19,10 +19,10 @@ L_main0:
 ;211105_Commande_MPPT_v2.c,153 :: 		current_in = 0;
 	CLRF        _current_in+0 
 	CLRF        _current_in+1 
-;211105_Commande_MPPT_v2.c,156 :: 		for (counter = 0; counter < 4; ++counter) {
+;211105_Commande_MPPT_v2.c,156 :: 		for (counter = 0; counter < 8; ++counter) {
 	CLRF        _counter+0 
 L_main3:
-	MOVLW       4
+	MOVLW       8
 	SUBWF       _counter+0, 0 
 	BTFSC       STATUS+0, 0 
 	GOTO        L_main4
@@ -33,22 +33,25 @@ L_main3:
 	ADDWF       _voltage_in+0, 1 
 	MOVF        R1, 0 
 	ADDWFC      _voltage_in+1, 1 
-;211105_Commande_MPPT_v2.c,156 :: 		for (counter = 0; counter < 4; ++counter) {
+;211105_Commande_MPPT_v2.c,156 :: 		for (counter = 0; counter < 8; ++counter) {
 	INCF        _counter+0, 1 
 ;211105_Commande_MPPT_v2.c,159 :: 		}
 	GOTO        L_main3
 L_main4:
-;211105_Commande_MPPT_v2.c,161 :: 		voltage_in >>= 2;
+;211105_Commande_MPPT_v2.c,161 :: 		voltage_in >>= 3;
+	MOVLW       3
+	MOVWF       R0 
+	MOVF        R0, 0 
+L__main73:
+	BZ          L__main74
 	RRCF        _voltage_in+1, 1 
 	RRCF        _voltage_in+0, 1 
 	BCF         _voltage_in+1, 7 
 	BTFSC       _voltage_in+1, 6 
 	BSF         _voltage_in+1, 7 
-	RRCF        _voltage_in+1, 1 
-	RRCF        _voltage_in+0, 1 
-	BCF         _voltage_in+1, 7 
-	BTFSC       _voltage_in+1, 6 
-	BSF         _voltage_in+1, 7 
+	ADDLW       255
+	GOTO        L__main73
+L__main74:
 ;211105_Commande_MPPT_v2.c,165 :: 		for (counter = 0; counter < 16; ++counter) {
 	CLRF        _counter+0 
 L_main6:
@@ -73,16 +76,16 @@ L_main7:
 	MOVLW       4
 	MOVWF       R0 
 	MOVF        R0, 0 
-L__main73:
-	BZ          L__main74
+L__main75:
+	BZ          L__main76
 	RRCF        _current_in+1, 1 
 	RRCF        _current_in+0, 1 
 	BCF         _current_in+1, 7 
 	BTFSC       _current_in+1, 6 
 	BSF         _current_in+1, 7 
 	ADDLW       255
-	GOTO        L__main73
-L__main74:
+	GOTO        L__main75
+L__main76:
 ;211105_Commande_MPPT_v2.c,171 :: 		switch(mode) {
 	GOTO        L_main9
 ;211105_Commande_MPPT_v2.c,172 :: 		case FAST_GMPPT:  /* THIS SECTION IS STILL OPTIMIZABLE */
@@ -124,10 +127,10 @@ L_main11:
 	XORWF       R2, 0 
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main75
+	GOTO        L__main77
 	MOVF        R1, 0 
 	SUBWF       _voltage_in+0, 0 
-L__main75:
+L__main77:
 	BTFSS       STATUS+0, 0 
 	GOTO        L__main72
 	MOVF        _sweep_iteration+0, 0 
@@ -158,10 +161,10 @@ L__main75:
 	XORWF       _voltage_in+1, 0 
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main76
+	GOTO        L__main78
 	MOVF        _voltage_in+0, 0 
 	SUBWF       R1, 0 
-L__main76:
+L__main78:
 	BTFSS       STATUS+0, 0 
 	GOTO        L__main72
 	GOTO        L_main16
@@ -196,10 +199,10 @@ L__main71:
 	XORWF       R2, 0 
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main77
+	GOTO        L__main79
 	MOVF        R1, 0 
 	SUBWF       _voltage_in+0, 0 
-L__main77:
+L__main79:
 	BTFSC       STATUS+0, 0 
 	GOTO        L_main17
 ;211105_Commande_MPPT_v2.c,180 :: 		D = D - ( (sweep_target[sweep_iteration] - voltage_in)>>(1+sweep_iteration) );
@@ -239,16 +242,16 @@ L__main77:
 	MOVF        R4, 0 
 	MOVWF       R1 
 	MOVF        R2, 0 
-L__main78:
-	BZ          L__main79
+L__main80:
+	BZ          L__main81
 	RRCF        R1, 1 
 	RRCF        R0, 1 
 	BCF         R1, 7 
 	BTFSC       R1, 6 
 	BSF         R1, 7 
 	ADDLW       255
-	GOTO        L__main78
-L__main79:
+	GOTO        L__main80
+L__main81:
 	MOVF        R0, 0 
 	SUBWF       _D+0, 1 
 	MOVF        R1, 0 
@@ -293,16 +296,16 @@ L_main17:
 	MOVF        R4, 0 
 	MOVWF       R1 
 	MOVF        R2, 0 
-L__main80:
-	BZ          L__main81
+L__main82:
+	BZ          L__main83
 	RRCF        R1, 1 
 	RRCF        R0, 1 
 	BCF         R1, 7 
 	BTFSC       R1, 6 
 	BSF         R1, 7 
 	ADDLW       255
-	GOTO        L__main80
-L__main81:
+	GOTO        L__main82
+L__main83:
 	MOVF        R0, 0 
 	ADDWF       _D+0, 1 
 	MOVF        R1, 0 
@@ -348,10 +351,10 @@ L_main16:
 	XORWF       R2, 0 
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main82
+	GOTO        L__main84
 	MOVF        R1, 0 
 	SUBWF       _voltage_in+0, 0 
-L__main82:
+L__main84:
 	BTFSS       STATUS+0, 0 
 	GOTO        L_main22
 	MOVF        _sweep_iteration+0, 0 
@@ -382,10 +385,10 @@ L__main82:
 	XORWF       _voltage_in+1, 0 
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main83
+	GOTO        L__main85
 	MOVF        _voltage_in+0, 0 
 	SUBWF       R1, 0 
-L__main83:
+L__main85:
 	BTFSS       STATUS+0, 0 
 	GOTO        L_main22
 L__main70:
@@ -438,18 +441,18 @@ L__main70:
 	XORWF       R3, 0 
 	SUBWF       R4, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main84
+	GOTO        L__main86
 	MOVF        R2, 0 
 	SUBWF       _P_max_fast_gmppt+2, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main84
+	GOTO        L__main86
 	MOVF        R1, 0 
 	SUBWF       _P_max_fast_gmppt+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main84
+	GOTO        L__main86
 	MOVF        R0, 0 
 	SUBWF       _P_max_fast_gmppt+0, 0 
-L__main84:
+L__main86:
 	BTFSC       STATUS+0, 0 
 	GOTO        L_main23
 ;211105_Commande_MPPT_v2.c,191 :: 		P_max_fast_gmppt = measured_power;
@@ -618,18 +621,18 @@ L_main27:
 	XORWF       R3, 0 
 	SUBWF       R4, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main85
+	GOTO        L__main87
 	MOVF        R2, 0 
 	SUBWF       _P_max_adaptive+2, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main85
+	GOTO        L__main87
 	MOVF        R1, 0 
 	SUBWF       _P_max_adaptive+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main85
+	GOTO        L__main87
 	MOVF        R0, 0 
 	SUBWF       _P_max_adaptive+0, 0 
-L__main85:
+L__main87:
 	BTFSC       STATUS+0, 0 
 	GOTO        L_main28
 ;211105_Commande_MPPT_v2.c,230 :: 		D_max_adaptive = D;
@@ -654,10 +657,10 @@ L_main28:
 	XORLW       2
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main86
+	GOTO        L__main88
 	MOVLW       168
 	SUBWF       _voltage_in+0, 0 
-L__main86:
+L__main88:
 	BTFSS       STATUS+0, 0 
 	GOTO        L_main29
 ;211105_Commande_MPPT_v2.c,239 :: 		D_step = speed_coeff;
@@ -673,10 +676,10 @@ L_main29:
 	XORLW       1
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main87
+	GOTO        L__main89
 	MOVLW       214
 	SUBWF       _voltage_in+0, 0 
-L__main87:
+L__main89:
 	BTFSS       STATUS+0, 0 
 	GOTO        L_main31
 ;211105_Commande_MPPT_v2.c,241 :: 		D_step = speed_coeff<<1;
@@ -711,18 +714,18 @@ L_main30:
 	MOVLW       128
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main88
+	GOTO        L__main90
 	MOVLW       0
 	SUBWF       _delta_power+2, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main88
+	GOTO        L__main90
 	MOVLW       0
 	SUBWF       _delta_power+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main88
+	GOTO        L__main90
 	MOVLW       0
 	SUBWF       _delta_power+0, 0 
-L__main88:
+L__main90:
 	BTFSS       STATUS+0, 0 
 	GOTO        L__main69
 	MOVLW       128
@@ -731,10 +734,10 @@ L__main88:
 	MOVLW       128
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main89
+	GOTO        L__main91
 	MOVLW       0
 	SUBWF       _delta_voltage+0, 0 
-L__main89:
+L__main91:
 	BTFSS       STATUS+0, 0 
 	GOTO        L__main69
 	GOTO        L__main67
@@ -745,18 +748,18 @@ L__main69:
 	XORWF       _delta_power+3, 0 
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main90
+	GOTO        L__main92
 	MOVF        _delta_power+2, 0 
 	SUBLW       0
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main90
+	GOTO        L__main92
 	MOVF        _delta_power+1, 0 
 	SUBLW       0
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main90
+	GOTO        L__main92
 	MOVF        _delta_power+0, 0 
 	SUBLW       0
-L__main90:
+L__main92:
 	BTFSS       STATUS+0, 0 
 	GOTO        L__main68
 	MOVLW       128
@@ -765,10 +768,10 @@ L__main90:
 	XORWF       _delta_voltage+1, 0 
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main91
+	GOTO        L__main93
 	MOVF        _delta_voltage+0, 0 
 	SUBLW       0
-L__main91:
+L__main93:
 	BTFSS       STATUS+0, 0 
 	GOTO        L__main68
 	GOTO        L__main67
@@ -802,18 +805,18 @@ L_main41:
 	MOVLW       128
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main92
+	GOTO        L__main94
 	MOVLW       0
 	SUBWF       _last_delta_power+2, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main92
+	GOTO        L__main94
 	MOVLW       0
 	SUBWF       _last_delta_power+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main92
+	GOTO        L__main94
 	MOVLW       0
 	SUBWF       _last_delta_power+0, 0 
-L__main92:
+L__main94:
 	BTFSS       STATUS+0, 0 
 	GOTO        L__main66
 	MOVLW       128
@@ -822,18 +825,18 @@ L__main92:
 	XORWF       _delta_power+3, 0 
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main93
+	GOTO        L__main95
 	MOVF        _delta_power+2, 0 
 	SUBLW       0
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main93
+	GOTO        L__main95
 	MOVF        _delta_power+1, 0 
 	SUBLW       0
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main93
+	GOTO        L__main95
 	MOVF        _delta_power+0, 0 
 	SUBLW       0
-L__main93:
+L__main95:
 	BTFSS       STATUS+0, 0 
 	GOTO        L__main66
 	GOTO        L__main64
@@ -844,18 +847,18 @@ L__main66:
 	XORWF       _last_delta_power+3, 0 
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main94
+	GOTO        L__main96
 	MOVF        _last_delta_power+2, 0 
 	SUBLW       0
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main94
+	GOTO        L__main96
 	MOVF        _last_delta_power+1, 0 
 	SUBLW       0
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main94
+	GOTO        L__main96
 	MOVF        _last_delta_power+0, 0 
 	SUBLW       0
-L__main94:
+L__main96:
 	BTFSS       STATUS+0, 0 
 	GOTO        L__main65
 	MOVLW       128
@@ -864,18 +867,18 @@ L__main94:
 	MOVLW       128
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main95
+	GOTO        L__main97
 	MOVLW       0
 	SUBWF       _delta_power+2, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main95
+	GOTO        L__main97
 	MOVLW       0
 	SUBWF       _delta_power+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main95
+	GOTO        L__main97
 	MOVLW       0
 	SUBWF       _delta_power+0, 0 
-L__main95:
+L__main97:
 	BTFSS       STATUS+0, 0 
 	GOTO        L__main65
 	GOTO        L__main64
@@ -1012,8 +1015,8 @@ L_main55:
 	MOVF        R3, 0 
 	MOVWF       R7 
 	MOVF        R8, 0 
-L__main96:
-	BZ          L__main97
+L__main98:
+	BZ          L__main99
 	RRCF        R7, 1 
 	RRCF        R6, 1 
 	RRCF        R5, 1 
@@ -1022,8 +1025,8 @@ L__main96:
 	BTFSC       R7, 6 
 	BSF         R7, 7 
 	ADDLW       255
-	GOTO        L__main96
-L__main97:
+	GOTO        L__main98
+L__main99:
 	MOVLW       128
 	XORWF       R7, 0 
 	MOVWF       R0 
@@ -1031,18 +1034,18 @@ L__main97:
 	XORWF       R12, 0 
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main98
+	GOTO        L__main100
 	MOVF        R11, 0 
 	SUBWF       R6, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main98
+	GOTO        L__main100
 	MOVF        R10, 0 
 	SUBWF       R5, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main98
+	GOTO        L__main100
 	MOVF        R9, 0 
 	SUBWF       R4, 0 
-L__main98:
+L__main100:
 	BTFSS       STATUS+0, 0 
 	GOTO        L__main62
 	MOVF        _P_max_adaptive+0, 0 
@@ -1072,8 +1075,8 @@ L__main98:
 	MOVF        _measured_power+3, 0 
 	MOVWF       R4 
 	MOVF        R0, 0 
-L__main99:
-	BZ          L__main100
+L__main101:
+	BZ          L__main102
 	RRCF        R4, 1 
 	RRCF        R3, 1 
 	RRCF        R2, 1 
@@ -1082,8 +1085,8 @@ L__main99:
 	BTFSC       R4, 6 
 	BSF         R4, 7 
 	ADDLW       255
-	GOTO        L__main99
-L__main100:
+	GOTO        L__main101
+L__main102:
 	MOVLW       128
 	XORWF       R4, 0 
 	MOVWF       R0 
@@ -1091,18 +1094,18 @@ L__main100:
 	XORWF       R8, 0 
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main101
+	GOTO        L__main103
 	MOVF        R7, 0 
 	SUBWF       R3, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main101
+	GOTO        L__main103
 	MOVF        R6, 0 
 	SUBWF       R2, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main101
+	GOTO        L__main103
 	MOVF        R5, 0 
 	SUBWF       R1, 0 
-L__main101:
+L__main103:
 	BTFSS       STATUS+0, 0 
 	GOTO        L__main62
 	GOTO        L_main58
@@ -1164,10 +1167,10 @@ L_main10:
 	MOVF        _D+1, 0 
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main102
+	GOTO        L__main104
 	MOVF        _D+0, 0 
 	SUBLW       240
-L__main102:
+L__main104:
 	BTFSC       STATUS+0, 0 
 	GOTO        L_main59
 ;211105_Commande_MPPT_v2.c,293 :: 		D = MAX_PWM;
@@ -1181,10 +1184,10 @@ L_main59:
 	MOVLW       0
 	SUBWF       _D+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main103
+	GOTO        L__main105
 	MOVLW       20
 	SUBWF       _D+0, 0 
-L__main103:
+L__main105:
 	BTFSC       STATUS+0, 0 
 	GOTO        L_main61
 ;211105_Commande_MPPT_v2.c,295 :: 		D = MIN_PWM;
@@ -1225,7 +1228,7 @@ _interrupt:
 	MOVLW       1
 	MOVWF       _settled+0 
 ;211105_Commande_MPPT_v2.c,317 :: 		}
-L__interrupt104:
+L__interrupt106:
 	RETFIE      1
 ; end of _interrupt
 
